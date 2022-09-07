@@ -102,21 +102,7 @@ fun Greeting(mobile: Long,Bank:List<String>,popularBankList:List<String>) {
 fun SearchBar(
 
 ){
-    var text by remember { mutableStateOf("Search Bank") }
 
-    TextField(value = text,
-        onValueChange = { text = it },
-        Modifier
-            .fillMaxWidth()
-
-            .padding(10.dp)
-            .clip(CircleShape)
-            .background(color = LightGrey)
-            .clickable(enabled = true, onClickLabel = null, onClick = {text=""}),
-        leadingIcon = {Icon(painter = painterResource(id =R.drawable.search_icon ) ,
-            contentDescription = "Search Icon") },
-
-    )
 }
 
 @Composable
