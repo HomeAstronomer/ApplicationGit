@@ -1,8 +1,5 @@
 package com.example.applicationgit
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
@@ -20,7 +17,7 @@ private  data class MainViewModelState(var banksDataList: List<AllBanksDataClass
         banksDataList=banksDataList
     )
 }
-class MainViewModel(): ViewModel() {
+class AllBanksModel(): ViewModel() {
     private  val viewModelState= MutableStateFlow(
         MainViewModelState(
             banksDataList = listOf()
@@ -40,11 +37,17 @@ class MainViewModel(): ViewModel() {
     }
 
     private fun getBanksDataList() {
-        var banks=listOf(AllBanksDataClass(R.drawable.bank_icon,"HDFC"),
-            AllBanksDataClass(R.drawable.bank_icon,"HDFC"),
-            AllBanksDataClass(R.drawable.bank_icon,"HDFC"),
-            AllBanksDataClass(R.drawable.bank_icon,"HDFC"),
-            AllBanksDataClass(R.drawable.bank_icon,"HDFC")
+        var banks=listOf(
+            AllBanksDataClass(R.drawable.hdfc,"HDFC"),
+            AllBanksDataClass(R.drawable.kotak_bank,"Kotak Mahindra Bank"),
+            AllBanksDataClass(R.drawable.sbi,"State Bank of India(SBI)"),
+            AllBanksDataClass(R.drawable.pnb,"Punjab National Bank"),
+            AllBanksDataClass(R.drawable.icici,"ICICI"),
+            AllBanksDataClass(R.drawable.hdfc,"HDFC"),
+            AllBanksDataClass(R.drawable.kotak_bank,"Kotak Mahindra Bank"),
+            AllBanksDataClass(R.drawable.sbi,"State Bank of India(SBI)"),
+            AllBanksDataClass(R.drawable.pnb,"Punjab National Bank"),
+            AllBanksDataClass(R.drawable.icici,"ICICI")
         )
         viewModelState.update { it.copy(banksDataList = banks) }
     }

@@ -1,43 +1,37 @@
 package com.example.applicationgit
 
-import android.graphics.drawable.VectorDrawable
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.applicationgit.R.drawable.search_icon
+import androidx.leanback.widget.SearchBar
 import com.example.applicationgit.ui.theme.ApplicationGitTheme
 import com.example.applicationgit.ui.theme.LightGrey
-import com.example.applicationgit.ui.theme.Teal200
 
 class MainActivity : ComponentActivity() {
-    private  val viewModel:MainViewModel by viewModels()
+    private  val allBankViewModel:AllBanksModel by viewModels()
+    private val searchBarViewModel:SearchBarModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("Working!!","")
@@ -50,7 +44,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting(7972600028,bankList,popularBankList,viewModel)
+                    Greeting(7972600028,bankList,popularBankList,allBankViewModel,searchBarViewModel)
                 }
             }
         }
@@ -58,20 +52,25 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(mobile: Long,
-             Bank:List<String>,
-             popularBankList:List<String>,
-             viewModel:MainViewModel
-           //  BanksModel:MainViewModel= viewModel()
+fun Greeting(
+    mobile: Long,
+    Bank: List<String>,
+    popularBankList: List<String>,
+    viewModel: AllBanksModel,
+    searchBarViewModel: SearchBarModel
+    //  BanksModel:AllBanksModel= allBankViewModel()
 
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val bankState by viewModel.uiState.collectAsState()
+    val searchBarState by searchBarViewModel.uiState.collectAsState()
 
 
-    Surface() {
+    Surface(
+        modifier = Modifier.fillMaxSize()
+    ) {
 
         Column(modifier = Modifier
-            .fillMaxSize()
+
             ) {
 
             TopAppBar(
@@ -86,7 +85,9 @@ fun Greeting(mobile: Long,
                 }
             )
             LazyColumn() {
+
                 items(1) {
+                    if(searchBarState.searchBarData.inputText.compareTo("")==0){
                     Text(
                         text = "Select a bank account linked to \n+91 $mobile",
                         fontSize = 35.sp,
@@ -98,15 +99,16 @@ fun Greeting(mobile: Long,
                         text = "Select a bank to create a UPI account for you",
                         fontSize = 22.sp,
                         modifier = Modifier.padding(start = 10.dp)
-                    )
-                    SearchBar()
+                    )}
+                    SearchBar(searchBarState.searchBarData.inputText, onNameChange = {searchBarViewModel.onNameChange(it)})
+                    if(searchBarState.searchBarData.inputText.compareTo("")==0){
                     Text(
                         text = "Popular banks",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(start = 10.dp)
                     )
-                    popularBanks(popularBankList)
+                    popularBanks(bankState.banksDataList)
                     Text(
                         text = "All Banks",
                         fontSize = 22.sp,
@@ -115,8 +117,8 @@ fun Greeting(mobile: Long,
                     )
 
 
-                }
-                items(items=uiState.banksDataList){
+                }}
+                items(items=bankState.banksDataList){
                     allBanks(bankName = it.BankName, BankIcon = it.iconId)
 
                 }
@@ -126,40 +128,46 @@ fun Greeting(mobile: Long,
 
 }
 @Composable
-fun SearchBar(
+fun SearchBar(name:String,onNameChange:(String)-> Unit) {
 
-){
-    var text by remember { mutableStateOf("Search Bank") }
 
-    TextField(value = text,
-        onValueChange = { text = it },
+    TextField(
+        value = name,
+        onValueChange = onNameChange,
+
         Modifier
             .fillMaxWidth()
-
             .padding(10.dp)
             .clip(CircleShape)
             .background(color = LightGrey)
-            .clickable(enabled = true, onClickLabel = null, onClick = { text = "" }),
-        leadingIcon = {Icon(painter = painterResource(id =R.drawable.search_icon ) ,
-            contentDescription = "Search Icon") },
+            .clickable(enabled = true, onClickLabel = null, onClick = {}),
+        placeholder={ Text(text = "Search Banks")},
 
-    )
+
+        leadingIcon = {
+            Icon(
+                painter = painterResource(id = R.drawable.search_icon),
+                contentDescription = "Search Icon"
+            )
+        },
+
+        )
 }
 
 @Composable
-fun popularBanks(popularBankList: List<String>) {
+fun popularBanks(popularBankList: List<AllBanksDataClass>) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally) {
         Row(modifier = Modifier.padding(5.dp)) {
-            banksImageWithText(1223,popularBankList.get(0))
-            banksImageWithText(1223,popularBankList.get(1))
-            banksImageWithText(1223,popularBankList.get(2))
+            banksImageWithText(popularBankList.get(0).iconId,popularBankList.get(0).BankName)
+            banksImageWithText(popularBankList.get(1).iconId,popularBankList.get(1).BankName)
+            banksImageWithText(popularBankList.get(2).iconId,popularBankList.get(2).BankName)
         }
         Row(modifier = Modifier.padding(5.dp)) {
-            banksImageWithText(1223,popularBankList.get(3))
-            banksImageWithText(1223,popularBankList.get(4))
-            banksImageWithText(1223,popularBankList.get(5))
+            banksImageWithText(popularBankList.get(3).iconId,popularBankList.get(3).BankName)
+            banksImageWithText(popularBankList.get(4).iconId,popularBankList.get(4).BankName)
+            banksImageWithText(popularBankList.get(5).iconId,popularBankList.get(5).BankName)
         }
     }
 
@@ -171,9 +179,10 @@ fun banksImageWithText(resourceId:Int, Bank:String) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.bank_icon ),
+            Image(
+                painter = painterResource(id = resourceId),
                 contentDescription = "Localized description",
+                contentScale=ContentScale.Crop,
                 modifier = Modifier
                     .clip(RectangleShape)
                     .size(50.dp)
@@ -188,12 +197,14 @@ fun banksImageWithText(resourceId:Int, Bank:String) {
 fun allBanks(bankName:String,BankIcon:Int) {
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
+        Image(
             painter = painterResource(id = BankIcon),
+            contentScale= ContentScale.Crop,
             modifier = Modifier
                 .size(40.dp)
                 .padding(5.dp),
-            contentDescription = "All Banks Icon"
+            contentDescription = "All Banks Icon",
+
         )
         Text(text = bankName, fontSize = 20.sp, modifier = Modifier.padding(5.dp))
     }
@@ -205,7 +216,12 @@ fun allBanks(bankName:String,BankIcon:Int) {
 @Composable
 fun DefaultPreview() {
     ApplicationGitTheme {
-        Greeting(7972600028, listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),MainViewModel())
+        Greeting(7972600028,
+            listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),
+            listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),
+            AllBanksModel(),
+            SearchBarModel()
+        )
     }
 }
 @Preview(showBackground = true)
@@ -213,13 +229,5 @@ fun DefaultPreview() {
 fun PopularBankPreview() {
     ApplicationGitTheme {
         banksImageWithText(1234,"HDFC")
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SearchBarPreview(){
-    ApplicationGitTheme {
-        SearchBar()
     }
 }
