@@ -2,12 +2,16 @@ package com.example.applicationgit
 
 import android.graphics.drawable.VectorDrawable
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,14 +30,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.applicationgit.R.drawable.search_icon
 import com.example.applicationgit.ui.theme.ApplicationGitTheme
 import com.example.applicationgit.ui.theme.LightGrey
 import com.example.applicationgit.ui.theme.Teal200
 
 class MainActivity : ComponentActivity() {
+    private  val viewModel:MainViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("Working!!","")
         setContent {
             ApplicationGitTheme {
                 val popularBankList:List<String> = listOf("State Bank Of India","HDFC Bank","ICICI Bank","Kotak MAhindra Bank Limited","Jio Payments Bank","Punjab National Bank")
@@ -43,7 +50,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting(7972600028,bankList,popularBankList)
+                    Greeting(7972600028,bankList,popularBankList,viewModel)
                 }
             }
         }
@@ -51,7 +58,16 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(mobile: Long,Bank:List<String>,popularBankList:List<String>) {
+fun Greeting(mobile: Long,
+             Bank:List<String>,
+             popularBankList:List<String>,
+             viewModel:MainViewModel
+           //  BanksModel:MainViewModel= viewModel()
+
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+
     Surface() {
 
         Column(modifier = Modifier
@@ -69,32 +85,43 @@ fun Greeting(mobile: Long,Bank:List<String>,popularBankList:List<String>) {
                     }
                 }
             )
-            Text(text = "Select a bank account linked to \n+91 $mobile",
-                fontSize = 35.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start=10.dp))
+            LazyColumn() {
+                items(1) {
+                    Text(
+                        text = "Select a bank account linked to \n+91 $mobile",
+                        fontSize = 35.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 10.dp)
+                    )
 
-            Text(text = "Select a bank to create a UPI account for you",
-                fontSize = 22.sp,
-                modifier = Modifier.padding(start=10.dp))
-            SearchBar()
-            Text(text = "Popular banks",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start=10.dp))
-            popularBanks(popularBankList)
-            Text(text = "All Banks",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 10.dp, top = 5.dp))
-            allBanks(Bank)
+                    Text(
+                        text = "Select a bank to create a UPI account for you",
+                        fontSize = 22.sp,
+                        modifier = Modifier.padding(start = 10.dp)
+                    )
+                    SearchBar()
+                    Text(
+                        text = "Popular banks",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 10.dp)
+                    )
+                    popularBanks(popularBankList)
+                    Text(
+                        text = "All Banks",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 10.dp, top = 5.dp)
+                    )
 
 
+                }
+                items(items=uiState.banksDataList){
+                    allBanks(bankName = it.BankName, BankIcon = it.iconId)
 
-
+                }
+            }
         }
-
-        
     }
 
 }
@@ -102,7 +129,21 @@ fun Greeting(mobile: Long,Bank:List<String>,popularBankList:List<String>) {
 fun SearchBar(
 
 ){
+    var text by remember { mutableStateOf("Search Bank") }
 
+    TextField(value = text,
+        onValueChange = { text = it },
+        Modifier
+            .fillMaxWidth()
+
+            .padding(10.dp)
+            .clip(CircleShape)
+            .background(color = LightGrey)
+            .clickable(enabled = true, onClickLabel = null, onClick = { text = "" }),
+        leadingIcon = {Icon(painter = painterResource(id =R.drawable.search_icon ) ,
+            contentDescription = "Search Icon") },
+
+    )
 }
 
 @Composable
@@ -126,7 +167,7 @@ fun popularBanks(popularBankList: List<String>) {
 
 @Composable
 fun banksImageWithText(resourceId:Int, Bank:String) {
-    IconButton(onClick = { /* doSomething() */ }, modifier = Modifier.padding(horizontal = 5.dp)) {
+    IconButton(onClick = {  }, modifier = Modifier.padding(horizontal = 5.dp)) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -144,32 +185,27 @@ fun banksImageWithText(resourceId:Int, Bank:String) {
 }
 
 @Composable
-fun allBanks(bankName:List<String>) {
-    LazyColumn(
-        Modifier
-            .padding(start = 10.dp)
-            .fillMaxWidth().fillMaxHeight())
-    {
-        items(items=bankName) {bankNames->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(id = R.drawable.bank_icon),
-                    modifier = Modifier
-                        .size(40.dp)
-                        .padding(5.dp),
-                    contentDescription = "All Banks Icon"
-                )
-                Text(text = bankNames, fontSize = 20.sp, modifier = Modifier.padding(5.dp))
-            }
-        }
+fun allBanks(bankName:String,BankIcon:Int) {
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(id = BankIcon),
+            modifier = Modifier
+                .size(40.dp)
+                .padding(5.dp),
+            contentDescription = "All Banks Icon"
+        )
+        Text(text = bankName, fontSize = 20.sp, modifier = Modifier.padding(5.dp))
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     ApplicationGitTheme {
-        Greeting(7972600028, listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"))
+        Greeting(7972600028, listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),MainViewModel())
     }
 }
 @Preview(showBackground = true)
