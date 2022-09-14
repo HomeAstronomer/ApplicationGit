@@ -25,13 +25,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.leanback.widget.SearchBar
 import com.example.applicationgit.ui.theme.ApplicationGitTheme
 import com.example.applicationgit.ui.theme.LightGrey
 
 class MainActivity : ComponentActivity() {
     private  val allBankViewModel:AllBanksModel by viewModels()
-    private val searchBarViewModel:SearchBarModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("Working!!","")
@@ -44,7 +43,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    Greeting(7972600028,bankList,popularBankList,allBankViewModel,searchBarViewModel)
+                    Greeting(7972600028,allBankViewModel)
                 }
             }
         }
@@ -54,25 +53,18 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(
     mobile: Long,
-    Bank: List<String>,
-    popularBankList: List<String>,
     viewModel: AllBanksModel,
-    searchBarViewModel: SearchBarModel
+
     //  BanksModel:AllBanksModel= allBankViewModel()
 
 ) {
     val bankState by viewModel.uiState.collectAsState()
-    val searchBarState by searchBarViewModel.uiState.collectAsState()
 
 
-    Surface(
-        modifier = Modifier.fillMaxSize()
-    ) {
 
-        Column(modifier = Modifier
+    Surface(modifier = Modifier.fillMaxSize()) {
 
-            ) {
-
+        Column() {
             TopAppBar(
                 title = { Text("") },
                 actions = {
@@ -87,38 +79,42 @@ fun Greeting(
             LazyColumn() {
 
                 items(1) {
-                    if(searchBarState.searchBarData.inputText.compareTo("")==0){
-                    Text(
-                        text = "Select a bank account linked to \n+91 $mobile",
-                        fontSize = 35.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 10.dp)
-                    )
+                    if(bankState.searchBarData.inputText.compareTo("")==0){
+                        Text(
+                            text = "Select a bank account linked to \n+91 $mobile",
+                            fontSize = 35.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 10.dp)
+                        )
 
-                    Text(
-                        text = "Select a bank to create a UPI account for you",
-                        fontSize = 22.sp,
-                        modifier = Modifier.padding(start = 10.dp)
-                    )}
-                    SearchBar(searchBarState.searchBarData.inputText, onNameChange = {searchBarViewModel.onNameChange(it)})
-                    if(searchBarState.searchBarData.inputText.compareTo("")==0){
-                    Text(
-                        text = "Popular banks",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 10.dp)
-                    )
-                    popularBanks(bankState.banksDataList)
-                    Text(
-                        text = "All Banks",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 10.dp, top = 5.dp)
-                    )
+                        Text(
+                            text = "Select a bank to create a UPI account for you",
+                            fontSize = 22.sp,
+                            modifier = Modifier.padding(start = 10.dp)
+                        )
+                    }
 
+                    SearchBar(bankState.searchBarData.inputText,
+                        onNameChange = {viewModel.onNameChange(it)})
 
-                }}
-                items(items=bankState.banksDataList){
+                    if(bankState.searchBarData.inputText.compareTo("")==0){
+                        Text(
+                            text = "Popular banks",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 10.dp)
+                        )
+                        popularBanks(bankState.banksDataList)
+                        Text(
+                            text = "All Banks",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 10.dp, top = 5.dp)
+                        )
+                    }
+                }
+                var arrayListBanks=viewModel.searchedList(bankState.searchBarData.inputText)
+                items(items=arrayListBanks){
                     allBanks(bankName = it.BankName, BankIcon = it.iconId)
 
                 }
@@ -134,7 +130,6 @@ fun SearchBar(name:String,onNameChange:(String)-> Unit) {
     TextField(
         value = name,
         onValueChange = onNameChange,
-
         Modifier
             .fillMaxWidth()
             .padding(10.dp)
@@ -142,15 +137,12 @@ fun SearchBar(name:String,onNameChange:(String)-> Unit) {
             .background(color = LightGrey)
             .clickable(enabled = true, onClickLabel = null, onClick = {}),
         placeholder={ Text(text = "Search Banks")},
-
-
         leadingIcon = {
             Icon(
                 painter = painterResource(id = R.drawable.search_icon),
                 contentDescription = "Search Icon"
             )
         },
-
         )
 }
 
@@ -217,10 +209,8 @@ fun allBanks(bankName:String,BankIcon:Int) {
 fun DefaultPreview() {
     ApplicationGitTheme {
         Greeting(7972600028,
-            listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),
-            listOf("HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank","HDFC","Kotak Mahindra Bank Limited","Abhyuday Bank","Adarsh Co-operative Bank Limited","ICICI Bank","Airtel Payments Bank"),
             AllBanksModel(),
-            SearchBarModel()
+
         )
     }
 }
